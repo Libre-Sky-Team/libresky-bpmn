@@ -338,7 +338,10 @@ app.createEditorWindow = function() {
   const windowOptions = {
     resizable: true,
     show: false,
-    title: 'Camunda Modeler'
+    title: 'Camunda Modeler',
+    webPreferences: {
+      preload: path.join(__dirname, 'preload.js')
+    }
   };
 
   if (process.platform === 'linux') {
