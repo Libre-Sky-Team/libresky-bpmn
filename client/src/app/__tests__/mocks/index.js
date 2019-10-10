@@ -418,6 +418,10 @@ export class Config extends Mock {
   getForPlugin() {}
 
   setForPlugin() {}
+
+  getCredentials() {}
+
+  setCredentials() {}
 }
 
 export class Log extends Mock {

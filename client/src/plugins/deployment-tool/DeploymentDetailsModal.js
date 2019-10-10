@@ -26,6 +26,7 @@ import AuthTypes from './AuthTypes';
 import {
   AuthBasic,
   AuthBearer,
+  CheckBox,
   FormControl
 } from './components';
 
@@ -37,16 +38,6 @@ import {
 
 import { ConnectionErrorMessages } from './errors';
 
-
-const initialFormValues = {
-  endpointUrl: 'http://localhost:8080/engine-rest',
-  tenantId: '',
-  deploymentName: 'diagram',
-  authType: AuthTypes.none,
-  username: '',
-  password: '',
-  bearer: ''
-};
 
 export default class DeploymentDetailsModal extends React.PureComponent {
 
@@ -64,7 +55,7 @@ export default class DeploymentDetailsModal extends React.PureComponent {
     this.mounted = true;
 
     // check connection with pre-validated initial form values
-    const initialValues = this.getInitialValues();
+    const initialValues = this.props.details;
     const errors = this.props.validate(initialValues);
 
     this.checkConnectionIfNeeded(initialValues, errors, true);
@@ -72,10 +63,6 @@ export default class DeploymentDetailsModal extends React.PureComponent {
 
   componentWillUnmount() {
     this.mounted = false;
-  }
-
-  getInitialValues() {
-    return { ...initialFormValues, ...this.props.details };
   }
 
   checkConnection = async values => {
@@ -203,10 +190,9 @@ export default class DeploymentDetailsModal extends React.PureComponent {
 
   render() {
     const {
+      details: initialValues,
       onFocusChange
     } = this.props;
-
-    const initialValues = this.getInitialValues();
 
     const {
       checkingConnection,
@@ -314,6 +300,16 @@ export default class DeploymentDetailsModal extends React.PureComponent {
 
                     { values.authType === AuthTypes.bearer && (
                       <AuthBearer onFocusChange={ onFocusChange } />) }
+
+                    { values.authType !== AuthTypes.none && (
+                      <Field
+                        name="rememberCredentials"
+                        component={ CheckBox }
+                        label={ `Save ${ values.authType === AuthTypes.basic ? 'password' : 'token' }` }
+                        onFocusChange={ onFocusChange }
+                      />
+                    )}
+
                   </div>
                 </fieldset>
               </Modal.Body>

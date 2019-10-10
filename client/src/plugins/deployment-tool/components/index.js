@@ -11,3 +11,4 @@
 export { default as FormControl } from './FormControl';
 export { default as AuthBasic } from './AuthBasic';
 export { default as AuthBearer } from './AuthBearer';
+export { default as CheckBox } from './CheckBox';

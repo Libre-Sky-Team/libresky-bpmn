@@ -30,8 +30,17 @@ const VALIDATED_FIELDS = [
   'endpointUrl'
 ];
 
-const CONFIG_KEY = 'deployment-config';
+const CONFIG_KEY = 'deployment-tool';
 
+const defaultDeploymentDetails = {
+  endpointUrl: 'http://localhost:8080/engine-rest',
+  tenantId: '',
+  authType: AuthTypes.none,
+  username: '',
+  password: '',
+  bearer: '',
+  rememberCredentials: false
+};
 
 export default class DeploymentTool extends PureComponent {
 
@@ -59,25 +68,7 @@ export default class DeploymentTool extends PureComponent {
       activeTab
     } = this.state;
 
-    this.deployTab(activeTab);
-  }
-
-  async saveDetails(tab, details) {
-    const {
-      config
-    } = this.props;
-
-    const savedDetails = this.getDetailsToSave(details);
-
-    return config.setForFile(tab.file, CONFIG_KEY, savedDetails);
-  }
-
-  async getSavedDetails(tab) {
-    const {
-      config
-    } = this.props;
-
-    return config.getForFile(tab.file, CONFIG_KEY);
+    return this.deployTab(activeTab);
   }
 
   async deployTab(tab) {
@@ -117,8 +108,10 @@ export default class DeploymentTool extends PureComponent {
       displayNotification
     } = this.props;
 
+    const payload = this.getDeploymentPayload(details);
+
     try {
-      await this.deployWithDetails(tab, details);
+      await this.deployWithDetails(tab, payload);
 
       displayNotification({
         type: 'success',
@@ -134,6 +127,93 @@ export default class DeploymentTool extends PureComponent {
       });
       log({ category: 'deploy-error', message: error.problems || error.message });
     }
+  }
+
+  saveDetails(tab, details) {
+    return Promise.all([
+      this.saveDeploymentDetails(tab, details),
+      this.saveAuthDetails(details)
+    ]);
+  }
+
+  saveDeploymentDetails(tab, details) {
+    const {
+      config
+    } = this.props;
+
+    const detailsForFile = this.getDetailsToSave(details);
+
+    return config.setForFile(tab.file, CONFIG_KEY, detailsForFile);
+  }
+
+  saveAuthDetails(details) {
+    const {
+      config
+    } = this.props;
+
+    // skip saving if user did not opt in
+    if (!details.rememberCredentials) {
+      return;
+    }
+
+    const accountName = this.getAccountName(details);
+
+    // skip saving if can't determine account name
+    if (!accountName) {
+      return;
+    }
+
+    const auth = this.getAuth(details);
+    const authWithoutUsername = omit(auth, 'username');
+
+    return config.setCredentials(CONFIG_KEY, accountName, authWithoutUsername);
+  }
+
+  async getSavedDetails(tab) {
+    const {
+      config
+    } = this.props;
+
+    const detailsForFile = await config.getForFile(tab.file, CONFIG_KEY);
+
+    const auth = await this.getSavedAuthDetails(detailsForFile);
+
+    return {
+      ...detailsForFile,
+      ...auth
+    };
+  }
+
+  getSavedAuthDetails(deploymentConfig) {
+    const {
+      config
+    } = this.props;
+
+    const accountName = this.getAccountName(deploymentConfig);
+
+    if (accountName) {
+      return config.getCredentials(CONFIG_KEY, accountName);
+    }
+  }
+
+  getAccountName(config) {
+    if (!config) {
+      return null;
+    }
+
+    const {
+      authType,
+      endpointUrl,
+      username
+    } = config;
+
+    if (!endpointUrl || !authType || authType === AuthTypes.none) {
+      return null;
+    }
+
+    return authType === AuthTypes.basic ?
+      `${authType}.${username}.${endpointUrl}` :
+      `${authType}.${endpointUrl}`;
   }
 
   deployWithDetails(tab, details) {
@@ -165,11 +245,7 @@ export default class DeploymentTool extends PureComponent {
 
         // contract: if details provided, user closed with O.K.
         // otherwise they canceled it
-        if (result) {
-          return resolve(this.getDetailsFromForm(result));
-        }
-
-        resolve();
+        return resolve(result);
       };
 
       this.setState({
@@ -183,7 +259,7 @@ export default class DeploymentTool extends PureComponent {
   }
 
   getDetailsToSave(rawDetails) {
-    return omit(rawDetails, 'auth');
+    return omit(rawDetails, [ 'bearer', 'password' ]);
   }
 
   validateDetails = values => {
@@ -216,7 +292,7 @@ export default class DeploymentTool extends PureComponent {
   }
 
   getInitialDetails(tab, providedDetails) {
-    const details = { ...providedDetails };
+    const details = { ...defaultDeploymentDetails, ...providedDetails };
 
     if (!details.deploymentName) {
       details.deploymentName = withoutExtension(tab.name);
@@ -236,7 +312,7 @@ export default class DeploymentTool extends PureComponent {
     }
   }
 
-  getDetailsFromForm(values) {
+  getDeploymentPayload(values) {
     const endpointUrl = this.getBaseUrl(values.endpointUrl);
 
     const payload = {

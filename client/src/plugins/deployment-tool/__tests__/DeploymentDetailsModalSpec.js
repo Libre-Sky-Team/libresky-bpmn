@@ -137,6 +137,7 @@ describe('<DeploymentDetailsModal>', () => {
 // helpers //////////
 function createModal(props, renderFn = shallow) {
   props = {
+    details: getDefaultDeploymentDetails(),
     checkConnection: noop,
     validate: () => ({}),
     ...props
@@ -151,3 +152,15 @@ function createModal(props, renderFn = shallow) {
 }
 
 function noop() {}
+
+function getDefaultDeploymentDetails() {
+  return {
+    deploymentName: 'diagram',
+    endpointUrl: 'http://localhost:8080/engine-rest',
+    tenantId: '',
+    authType: AuthTypes.none,
+    username: '',
+    password: '',
+    bearer: ''
+  };
+}

@@ -13,7 +13,7 @@ import React from 'react';
 import classnames from 'classnames';
 
 
-export default function FormControl({
+export default function CheckBox({
   field,
   hint,
   label,
@@ -22,16 +22,16 @@ export default function FormControl({
   form: { touched, errors, isSubmitting },
   ...props
 }) {
-  const { name } = field;
+  const {
+    name,
+    value
+  } = field;
 
   const invalid = errors[name] && touched[name];
 
   return (
     <React.Fragment>
-      <div>
-        <label htmlFor={ name }>{ label }</label>
-      </div>
-
+      <div />
       <div>
         <input
           { ...field } { ...props }
@@ -42,8 +42,13 @@ export default function FormControl({
             valid: !errors[name] && touched[name],
             invalid
           }) }
+          type="checkbox"
+          checked={ value }
+          value={ name }
           id={ name }
         />
+
+        <label htmlFor={ name }>{ label }</label>
 
         { invalid ? (
           <div className="hint error">{errors[name]}</div>
