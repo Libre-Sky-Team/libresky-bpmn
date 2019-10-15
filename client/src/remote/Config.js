@@ -166,4 +166,31 @@ export default class Config {
     return configForPlugin;
   }
 
+  async getCredentials(service, account, defaultValue = null) {
+    const credentials = await this.get('credentials') || {};
+
+    const configForService = credentials[ service ];
+
+    if (!configForService) {
+      return defaultValue;
+    }
+
+    const value = configForService[ account ];
+
+    if (isNil(value)) {
+      return defaultValue;
+    }
+
+    return value;
+  }
+
+  async setCredentials(service, account, value) {
+    const credentials = await this.get('credentials') || {};
+
+    const configForService = credentials[ service ] = credentials[ service ] || {};
+
+    configForService[ account ] = value;
+
+    return this.set('credentials', credentials);
+  }
 }

@@ -315,4 +315,78 @@ describe('config', function() {
 
   });
 
+
+  describe('#getCredentials', function() {
+
+    it('should get', async function() {
+
+      // given
+      const credentialsConfig = {
+        service: {
+          account: {
+            username: 'demo',
+            password: 'demo'
+          }
+        }
+      };
+      backend.setSendResponse(credentialsConfig);
+
+      // when
+      const credentialsFromConfig = await config.getCredentials('service', 'account');
+
+      // then
+      expect(credentialsFromConfig).to.equal(credentialsConfig.service.account);
+    });
+
+
+    it('should return default value if no credentials stored', async function() {
+
+      // given
+      const credentials = {
+        username: 'demo',
+        password: 'demo'
+      };
+      backend.setSendResponse(null);
+
+      // when
+      const credentialsFromConfig = await config.getCredentials('service', 'account', credentials);
+
+      // then
+      expect(credentialsFromConfig).to.equal(credentials);
+    });
+
+
+    it('should return default value if no credentials for account stored', async function() {
+
+      // given
+      const credentials = {
+        username: 'demo',
+        password: 'demo'
+      };
+      backend.setSendResponse({ service: {} });
+
+      // when
+      const credentialsFromConfig = await config.getCredentials('service', 'account', credentials);
+
+      // then
+      expect(credentialsFromConfig).to.equal(credentials);
+    });
+  });
+
+
+  describe('#setCredentials', function() {
+
+    it('should set', async function() {
+
+      // given
+      backend.setSendResponse(null);
+
+      // when
+      await config.setCredentials('service', 'account', 'foo');
+
+      // then
+      // expect not to fail
+    });
+  });
+
 });
