@@ -16,6 +16,8 @@ import { Modal } from '../../app/primitives';
 
 import css from './DeploymentDetailsModal.less';
 
+import CheckIcon from 'icons/Check.svg';
+
 import AuthTypes from './AuthTypes';
 
 import {
@@ -79,7 +81,7 @@ export default class DeploymentDetailsModal extends React.PureComponent {
     }
 
     this.setState({
-      checkingConnection: true,
+      checkingConnection: false,
       connectionHint: null,
       lastUsername: values.username,
       lastPassword: values.password,
@@ -88,7 +90,11 @@ export default class DeploymentDetailsModal extends React.PureComponent {
 
     const connectionError = await this.props.checkConnection(values);
 
-    this.mounted && this.setState({ connectionError, checkingConnection: false });
+    this.mounted && this.setState({
+      connectionChecked: true,
+      connectionError,
+      checkingConnection: false
+    });
   }
 
   lazilyCheckConnection = debounce(this.checkConnection, 1000);
@@ -195,6 +201,7 @@ export default class DeploymentDetailsModal extends React.PureComponent {
 
     const {
       checkingConnection,
+      connectionChecked,
       connectionError,
       connectionHint,
       detailsOpen
@@ -251,12 +258,15 @@ export default class DeploymentDetailsModal extends React.PureComponent {
                       onFocusChange={ onFocusChange }
                     /> }
                   </div>
-
                 </fieldset>
-
                 <fieldset>
-
-                  <legend>Endpoint Configuration</legend>
+                  <legend>
+                    Endpoint Configuration {
+                      (connectionChecked && !connectionError) && <span title="Successfully connected to Camunda">
+                        <CheckIcon color="green" />
+                      </span>
+                    }
+                  </legend>
 
                   <ConnectionCheckResult
                     checkingConnection={ checkingConnection }
@@ -341,11 +351,7 @@ function ConnectionCheckResult({ checkingConnection, error, hint }) {
   }
 
   if (checkingConnection === false) {
-    return (
-      <div className="configuration-status configuration-status__success">
-        Connected successfully.
-      </div>
-    );
+    return null;
   }
 
   return (
