@@ -18,6 +18,9 @@ import css from './DeploymentDetailsModal.less';
 
 import CheckIcon from 'icons/Check.svg';
 
+import ExpandIcon from 'icons/ChevronDown.svg';
+import CollapseIcon from 'icons/ChevronUp.svg';
+
 import AuthTypes from './AuthTypes';
 
 import {
@@ -237,7 +240,11 @@ export default class DeploymentDetailsModal extends React.PureComponent {
                       title="Toggle Advanced Details"
                       disabled={ values['tenantId'] }
                     >
-                      { (detailsOpen || values['tenantId']) ? '-' : '+' }
+                      {
+                        (detailsOpen || values['tenantId'])
+                          ? <CollapseIcon />
+                          : <ExpandIcon />
+                      }
                     </button>
                   </legend>
 
