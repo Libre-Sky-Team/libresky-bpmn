@@ -308,7 +308,6 @@ export default class DeploymentDetailsModal extends React.PureComponent {
 
                     { values.authType === AuthTypes.bearer && (
                       <AuthBearer onFocusChange={ onFocusChange } />) }
-
                   </div>
                 </fieldset>
               </Modal.Body>
