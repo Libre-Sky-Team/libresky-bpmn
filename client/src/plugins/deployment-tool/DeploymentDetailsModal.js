@@ -123,7 +123,7 @@ export default class DeploymentDetailsModal extends React.PureComponent {
     const missingConfigHint = this.getEndpointConfigHint(values, errors);
 
     // skip connection check in case of invalid input
-    if (missingConfigHint) {
+    if (missingConfigHint !== null) {
       this.setState({
         connectionHint: missingConfigHint
       });
@@ -165,11 +165,17 @@ export default class DeploymentDetailsModal extends React.PureComponent {
 
     if (errors.endpointUrl && areCredentialsMissing) {
       return 'Please finish the endpoint configuration to test the server connection.';
-    } else if (errors.endpointUrl) {
-      return 'Please provide a valid REST endpoint to test the server connection.';
-    } else if (areCredentialsMissing) {
-      return 'Please add the credentials to test the server connection.';
     }
+
+    if (errors.endpointUrl) {
+      return 'Please provide a valid REST endpoint to test the server connection.';
+    }
+
+    if (areCredentialsMissing) {
+      return '';
+    }
+
+    return null;
   }
 
   getCredentialsConfigFields(authType) {
