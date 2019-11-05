@@ -46,7 +46,7 @@ export default class CamundaAPI {
 
     const headers = this.getHeaders(auth);
 
-    const response = await this.safelyFetch(`${this.baseUrl}/deployment/create`, {
+    const response = await this.fetch(`${this.baseUrl}/deployment/create`, {
       method: 'POST',
       body: form,
       headers
@@ -66,7 +66,7 @@ export default class CamundaAPI {
       };
     }
 
-    const body = await this.safelyParse(response);
+    const body = await this.parse(response);
 
     throw new DeploymentError(response, body);
   }
@@ -76,7 +76,7 @@ export default class CamundaAPI {
 
     const headers = this.getHeaders(auth);
 
-    const response = await this.safelyFetch(`${this.baseUrl}/deployment?maxResults=0`, { headers });
+    const response = await this.fetch(`${this.baseUrl}/deployment?maxResults=0`, { headers });
 
     if (response.ok) {
       return;
@@ -111,7 +111,7 @@ export default class CamundaAPI {
     throw new Error('Unknown auth options.');
   }
 
-  async safelyFetch(url, options = {}) {
+  async fetch(url, options = {}) {
     let response;
 
     try {
@@ -132,14 +132,12 @@ export default class CamundaAPI {
   setupTimeoutSignal(timeout = FETCH_TIMEOUT) {
     const controller = new AbortController();
 
-    const { signal } = controller;
-
     setTimeout(() => controller.abort(), timeout);
 
-    return signal;
+    return controller.signal;
   }
 
-  async safelyParse(response) {
+  async parse(response) {
     try {
       const json = await response.json();
 
