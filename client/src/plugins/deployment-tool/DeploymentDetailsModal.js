@@ -188,7 +188,8 @@ export default class DeploymentDetailsModal extends React.PureComponent {
 
   render() {
     const {
-      onFocusChange
+      onFocusChange,
+      modalOptions
     } = this.props;
 
     const initialValues = this.getInitialValues();
@@ -201,23 +202,32 @@ export default class DeploymentDetailsModal extends React.PureComponent {
     } = this.state;
 
     const onClose = this.onClose;
+    const onSubmit = this.onSubmit;
 
     return (
       <Modal className={ css.DeploymentDetailsModal } onClose={ onClose }>
 
         <Formik
           initialValues={ initialValues }
-          onSubmit={ this.onSubmit }
+          onSubmit={ onSubmit }
           validate={ this.validate }
         >
           {({ isSubmitting, values }) => (
             <Form>
-              <Modal.Title>Deploy Diagram</Modal.Title>
+              <Modal.Title>
+                {
+                  modalOptions && modalOptions.title || 'Deploy Diagram'
+                }
+              </Modal.Title>
 
               <Modal.Body>
-                <p className="intro">
-                  Specify deployment details and deploy this diagram to Camunda.
-                </p>
+                {
+                  modalOptions && modalOptions.intro ?
+                    modalOptions.intro :
+                    <p className="intro">
+                      Specify deployment details and deploy this diagram to Camunda.
+                    </p>
+                }
 
                 <fieldset>
 
@@ -299,9 +309,10 @@ export default class DeploymentDetailsModal extends React.PureComponent {
               <Modal.Footer>
                 <div className="form-submit">
                   <button
+                    className="btn btn-primary"
                     type="submit"
                     disabled={ isSubmitting }>
-                    Deploy
+                    { modalOptions && modalOptions.primaryAction || 'Deploy' }
                   </button>
 
                   <button

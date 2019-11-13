@@ -152,7 +152,7 @@ export default class DeploymentTool extends PureComponent {
     return false;
   }
 
-  getDeployDetailsFromUserInput(tab, details) {
+  getDeployDetailsFromUserInput(tab, details, modalOptions) {
     const initialDetails = this.getInitialDetails(tab, details);
 
     return new Promise(resolve => {
@@ -177,7 +177,8 @@ export default class DeploymentTool extends PureComponent {
         modalState: {
           tab,
           details: initialDetails,
-          handleClose
+          handleClose,
+          modalOptions
         }
       });
     });
@@ -323,6 +324,7 @@ export default class DeploymentTool extends PureComponent {
           activeTab={ modalState.tab }
           onClose={ modalState.handleClose }
           onFocusChange={ this.handleFocusChange }
+          modalOptions={ modalState.modalOptions }
           validate={ this.validateDetails }
           checkConnection={ this.checkConnection }
         /> }
