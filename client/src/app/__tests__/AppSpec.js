@@ -2337,7 +2337,7 @@ describe('<App>', function() {
       app.getConfig('foo');
 
       // then
-      expect(getConfigSpy).to.be.calledOnceWith('foo');
+      expect(getConfigSpy).to.be.calledWith('foo');
     });
 
   });
@@ -2547,6 +2547,84 @@ describe('<App>', function() {
 
   });
 
+
+  describe('privacy preferences', function() {
+
+    it('should get on start', function() {
+
+      // given
+      const getConfigSpy = spy();
+
+      const config = new Config({
+        get: getConfigSpy
+      });
+
+      // when
+      createApp({
+        globals: {
+          config
+        }
+      });
+
+      // then
+      expect(getConfigSpy).to.be.calledWith('editor.privacyPreferences');
+    });
+
+
+    it('should call showPrivacyPreferences if non existent', async function() {
+
+      // given
+      const showPrivacyPreferencesSpy = spy();
+
+      const config = new Config({
+        get: function() {
+          return null;
+        }
+      });
+
+      const { app } = createApp({
+        globals: {
+          config
+        }
+      });
+
+      app.showPrivacyPreferences = showPrivacyPreferencesSpy;
+
+      // when
+      await app.handlePrivacyPreferences(true);
+
+      // then
+      expect(showPrivacyPreferencesSpy).to.have.been.called;
+
+    });
+
+
+    it('should not call showPrivacyPreferences if existent', async function() {
+
+      // given
+      const showPrivacyPreferencesSpy = spy();
+
+      const config = new Config({
+        get: function() {
+          return {};
+        }
+      });
+
+      const { app } = createApp({
+        globals: {
+          config
+        }
+      });
+
+      app.showPrivacyPreferences = showPrivacyPreferencesSpy;
+
+      // when
+      await app.handlePrivacyPreferences(true);
+
+      // then
+      expect(showPrivacyPreferencesSpy).to.have.not.been.called;
+    });
+  });
 });
 
 
