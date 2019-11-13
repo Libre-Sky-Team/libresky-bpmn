@@ -10,9 +10,11 @@
 
 import ConnectionError, { ConnectionErrorMessages } from './ConnectionError';
 import DeploymentError from './DeploymentError';
+import StartInstanceError from './StartInstanceError';
 
 export {
   ConnectionError,
   ConnectionErrorMessages,
-  DeploymentError
+  DeploymentError,
+  StartInstanceError
 };

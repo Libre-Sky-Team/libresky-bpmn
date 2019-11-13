@@ -10,7 +10,8 @@
 
 import {
   ConnectionError,
-  DeploymentError
+  DeploymentError,
+  StartInstanceError
 } from './errors';
 
 const FETCH_TIMEOUT = 5000;
@@ -69,6 +70,42 @@ export default class CamundaAPI {
     const body = await this.safelyParse(response);
 
     throw new DeploymentError(response, body);
+  }
+
+  async startInstance(processDefinition, details) {
+
+    const {
+      auth,
+      businessKey,
+      variables
+    } = details;
+
+    let headers ={
+      'content-type': 'application/json'
+    };
+
+    headers = {
+      ...headers,
+      ...this.getHeaders(auth)
+    };
+
+    const response = await this.safelyFetch(`${this.baseUrl}/process-definition/${processDefinition.id}/start`, {
+      method: 'POST',
+      body: JSON.stringify({
+        businessKey,
+        variables
+      }),
+      headers
+    });
+
+    if (response.ok) {
+      return await response.json();
+    }
+
+    const body = await this.safelyParse(response);
+
+    throw new StartInstanceError(response, body);
+
   }
 
   async checkConnection(details = {}) {
