@@ -30,8 +30,7 @@ const VALIDATED_FIELDS = [
   'endpointUrl'
 ];
 
-const CONFIG_KEY = 'deployment-config';
-
+const DEPLOY_CONFIG_KEY = 'deployment-config';
 
 export default class DeploymentTool extends PureComponent {
 
@@ -62,22 +61,22 @@ export default class DeploymentTool extends PureComponent {
     this.deployTab(activeTab);
   }
 
-  async saveDetails(tab, details) {
+  async saveDeployDetails(tab, details) {
     const {
       config
     } = this.props;
 
-    const savedDetails = this.getDetailsToSave(details);
+    const savedDetails = this.getDeployDetailsToSave(details);
 
-    return config.setForFile(tab.file, CONFIG_KEY, savedDetails);
+    return config.setForFile(tab.file, DEPLOY_CONFIG_KEY, savedDetails);
   }
 
-  async getSavedDetails(tab) {
+  async getSavedDeploymentDetails(tab) {
     const {
       config
     } = this.props;
 
-    return config.getForFile(tab.file, CONFIG_KEY);
+    return config.getForFile(tab.file, DEPLOY_CONFIG_KEY);
   }
 
   async deployTab(tab) {
@@ -92,7 +91,7 @@ export default class DeploymentTool extends PureComponent {
 
     // (2) Get deployment details
     // (2.1) Try to get existing deployment details
-    let details = await this.getSavedDetails(tab);
+    let details = await this.getSavedDeploymentDetails(tab);
 
     // (2.2) Check if details are complete
     const canDeploy = this.canDeployWithDetails(details);
@@ -100,14 +99,14 @@ export default class DeploymentTool extends PureComponent {
     if (!canDeploy) {
 
       // (2.3) Open modal to enter deployment details
-      details = await this.getDetailsFromUserInput(tab, details);
+      details = await this.getDeployDetailsFromUserInput(tab, details);
 
       // (2.3.1) Handle user cancelation
       if (!details) {
         return;
       }
 
-      await this.saveDetails(tab, details);
+      await this.saveDeployDetails(tab, details);
     }
 
     // (3) Trigger deployment
@@ -117,8 +116,10 @@ export default class DeploymentTool extends PureComponent {
       displayNotification
     } = this.props;
 
+    let result;
+
     try {
-      await this.deployWithDetails(tab, details);
+      result = await this.deployWithDetails(tab, details);
 
       displayNotification({
         type: 'success',
@@ -134,6 +135,9 @@ export default class DeploymentTool extends PureComponent {
       });
       log({ category: 'deploy-error', message: error.problems || error.message });
     }
+
+    // (3.2) save deployed process definition
+    await this.saveProcessDefinition(tab, result.deployedProcessDefinition);
   }
 
   deployWithDetails(tab, details) {
@@ -148,7 +152,7 @@ export default class DeploymentTool extends PureComponent {
     return false;
   }
 
-  getDetailsFromUserInput(tab, details) {
+  getDeployDetailsFromUserInput(tab, details) {
     const initialDetails = this.getInitialDetails(tab, details);
 
     return new Promise(resolve => {
@@ -179,8 +183,21 @@ export default class DeploymentTool extends PureComponent {
     });
   }
 
-  getDetailsToSave(rawDetails) {
-    return omit(rawDetails, 'auth');
+  getDeployDetailsToSave(rawDetails) {
+    return omit(rawDetails, [ 'auth' ]);
+  }
+
+  async saveProcessDefinition(tab, processDefinition) {
+
+    if (!processDefinition) {
+      return;
+    }
+
+    const {
+      config
+    } = this.props;
+
+    return await config.setForFile(tab.file, 'process-definition', processDefinition);
   }
 
   validateDetails = values => {
