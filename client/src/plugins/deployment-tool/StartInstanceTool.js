@@ -50,11 +50,11 @@ export default class StartInstanceTool extends PureComponent {
 
     this.START_ACTIONS = [
       {
-        name: 'Start Process Instance again',
+        name: 'Start process again',
         onClick: this.startInstance.bind(this)
       },
       {
-        name: 'Start Process Instance with new Configuration',
+        name: 'Start process with new configuration',
         onClick: () => {
           const {
             activeTab
@@ -72,6 +72,7 @@ export default class StartInstanceTool extends PureComponent {
     this.deployTab = deployRef.current.deployTab.bind(deployRef.current);
     this.getDeployDetailsFromUserInput = deployRef.current.getDeployDetailsFromUserInput.bind(deployRef.current);
     this.saveDeployDetails = deployRef.current.saveDeployDetails.bind(deployRef.current);
+    this.checkConnection = deployRef.current.checkConnection.bind(deployRef.current);
   }
 
   saveTab() {
@@ -90,43 +91,17 @@ export default class StartInstanceTool extends PureComponent {
     this.startTab(activeTab);
   }
 
-  // todo(pinussilvestrus): use this in the future to ensure deploying of current version
-  async ensureDeployed(tab, forceDeploy = false) {
+  async ensureVersionDeployed(tab, details) {
 
     const {
-      log,
-      displayNotification
+      displayNotification,
+      log
     } = this.props;
 
-    // (1) Get deployment details
-    // (1.1) Try to get existing deployment details
-    let details = await this.getSavedDeploymentDetails(tab);
-
-    // (1.2) Open modal to enter deployment details
-    if (!forceDeploy) {
-      details = await this.getDeployDetailsFromUserInput(tab, details, {
-        title: DeployStepTitle(),
-        intro: DeployIntro(),
-        primaryAction: 'Next'
-      });
-
-      // (1.2.1) Handle user cancelation
-      if (!details) {
-        return;
-      }
-
-      await this.saveDeployDetails(tab, details);
-    }
-
-    // (2) Trigger deployment
-    // (2.1) Show deployment result (success or error
+    // try to deploy current diagram version
     try {
       const deployResult = await this.deployWithDetails(tab, details);
-
-      // (3.2) save deployed process definition
       await this.saveProcessDefinition(tab, deployResult.deployedProcessDefinition);
-
-      return details;
     } catch (error) {
       displayNotification({
         type: 'error',
@@ -135,10 +110,30 @@ export default class StartInstanceTool extends PureComponent {
         duration: 10000
       });
       log({ category: 'deploy-error', message: error.problems || error.message });
+    }
 
+    // return process definition for new version or last saved one
+    return await this.getSavedProcessDefinition(tab);
+  }
+
+  async ensureDeploymentDetails(tab) {
+
+    let details = await this.getSavedDeploymentDetails(tab);
+
+    details = await this.getDeployDetailsFromUserInput(tab, details, {
+      title: DeployStepTitle(),
+      intro: DeployIntro(),
+      primaryAction: 'Next'
+    });
+
+    // handle user cancelation
+    if (!details) {
       return;
     }
 
+    await this.saveDeployDetails(tab, details);
+
+    return details;
   }
 
   // todo(pinussilvestrus): refactor flags
@@ -149,34 +144,46 @@ export default class StartInstanceTool extends PureComponent {
       log
     } = this.props;
 
+    // (0) Make sure diagram is up to date
     tab = await this.saveTab();
 
     if (!tab) {
       return;
     }
 
-    // (1) Get deployment details
-    let processDefinition = await this.getSavedProcessDefinition(tab);
+    let deploymentDetails = await this.getSavedDeploymentDetails(tab);
 
-    // todo(pinussilvestrus): change with future checks
-    const deploymentDetails = await this.ensureDeployed(tab, !!processDefinition);
+    // (1) Check connection to engine
+    const hasError = deploymentDetails ? await this.checkConnection(deploymentDetails): true;
 
-    // todo(pinussilvestrus): this indicates user cancelation in the deploy step,
-    // should not be needed here
+    // (1.1) Ensure deployment details
+    if (hasError) {
+      deploymentDetails = await this.ensureDeploymentDetails(tab);
+    }
+
+    // this indicates user cancelation in the deploy step,
     if (!deploymentDetails) {
       return;
     }
 
-    processDefinition = await this.getSavedProcessDefinition(tab);
+    // (2) Ensure current diagram version is deployed
+    const processDefinition = await this.ensureVersionDeployed(tab, deploymentDetails);
 
-    // (2) Get start details
+    // Assumption: error occurred while deploying and notification was shown
+    if (!processDefinition) {
+
+      // todo(pinussilvestrus): what to do if process not executable?
+      return;
+    }
+
+    // (3) Get start details
     let startDetails = await this.getSavedStartDetails(tab);
 
     const canStart = startDetails && this.canStartWithDetails(startDetails);
 
     if (!canStart || forceModal) {
 
-      // (2.1) Open Modal to enter start details
+      // (3.1) Open Modal to enter start details
       startDetails = await this.getStartDetailsFromUserInput(tab, startDetails);
 
       if (!startDetails) {
@@ -186,13 +193,13 @@ export default class StartInstanceTool extends PureComponent {
       await this.saveStartDetails(tab, startDetails);
     }
 
-    // todo(pinussilvestrus): what about 'auth' details
     startDetails = {
       ...startDetails,
-      endpointUrl: deploymentDetails.endpointUrl
+      endpointUrl: deploymentDetails.endpointUrl,
+      auth: deploymentDetails.auth
     };
 
-    // (3) Trigger Start
+    // (4) Trigger start instance
     try {
       const processInstance = await this.startWithDetails(startDetails, processDefinition);
 
@@ -310,23 +317,6 @@ export default class StartInstanceTool extends PureComponent {
     return errors;
   }
 
-  checkConnection = async values => {
-    const baseUrl = this.getBaseUrl(values.endpointUrl);
-    const auth = this.getAuth(values);
-
-    const api = new CamundaAPI(baseUrl);
-
-    let connectionError = null;
-
-    try {
-      await api.checkConnection({ auth });
-    } catch (error) {
-      connectionError = error.message;
-    }
-
-    return connectionError;
-  }
-
   getDetailsFromForm(values) {
     const payload = {
       businessKey: values.businessKey
@@ -375,6 +365,7 @@ export default class StartInstanceTool extends PureComponent {
           <Icon name="play" />
         </Button>
         <DropdownButton
+          className={ css.DropdownButton }
           items={ () => this.START_ACTIONS.map(DropdownItem) }
         ></DropdownButton>
       </Fill>
@@ -403,7 +394,7 @@ function DropdownItem(action, key) {
   return (
     <div
       key={ key }
-      className={ css.DropdownItem }
+      className='dropdown-item'
       onClick={ onClick }>
       <span>{ name }</span>
     </div>

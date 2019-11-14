@@ -1,12 +1,18 @@
-:local(.DropdownItem) {
+:local(.DropdownButton) {
 
-  span {
+  button {
+    margin-left: -8px;
+  }
+
+  .dropdown-item {
+    span {
       margin: 5px;
       cursor: pointer;
   
       &:hover {
         opacity: 0.5;
       }
+    }
   }
 
   .caret {
