@@ -12,11 +12,9 @@ import React, { PureComponent } from 'react';
 
 import { pick } from 'min-dash';
 
-import AuthTypes from './AuthTypes';
 import CamundaAPI from './CamundaAPI';
 import StartInstanceDetailsModal from './StartInstanceDetailsModal';
 import getEditMenu from './getEditMenu';
-import validators from './validators';
 
 import css from './StartInstanceTool.less';
 
@@ -227,7 +225,6 @@ export default class StartInstanceTool extends PureComponent {
     return config.setForFile(tab.file, START_CONFIG_KEY, savedDetails);
   }
 
-  // todo(pinussilvestrus): investigate better validation on when to run directly
   canStartWithDetails(details) {
 
     const {
@@ -266,7 +263,7 @@ export default class StartInstanceTool extends PureComponent {
         // contract: if details provided, user closed with O.K.
         // otherwise they canceled it
         if (result) {
-          return resolve(this.getDetailsFromForm(result));
+          return resolve(result);
         }
       };
 
@@ -307,41 +304,6 @@ export default class StartInstanceTool extends PureComponent {
     return pick(rawDetails, [ 'businessKey' ]);
   }
 
-  validateDetails = values => {
-    const validatedFields = this.getValidatedFields(values);
-
-    const errors = validatedFields.reduce((currentErrors, field) => {
-      const error = validators[field] && validators[field](values[field]);
-
-      return error ? { ...currentErrors, [field]: error } : currentErrors;
-    }, {});
-
-    return errors;
-  }
-
-  getDetailsFromForm(values) {
-    const payload = {
-      businessKey: values.businessKey
-    };
-
-    return payload;
-  }
-
-  getAuth({ authType, username, password, bearer }) {
-    switch (authType) {
-    case AuthTypes.basic:
-      return {
-        username,
-        password
-      };
-    case AuthTypes.bearer: {
-      return {
-        bearer
-      };
-    }
-    }
-  }
-
   handleFocusChange = event => {
     const editMenu = getEditMenu(isFocusedOnInput(event));
 
@@ -378,7 +340,6 @@ export default class StartInstanceTool extends PureComponent {
         activeTab={ startModalState.tab }
         onClose={ startModalState.handleClose }
         onFocusChange={ this.handleFocusChange }
-        validate={ this.validateDetails }
       /> }
     </React.Fragment>;
   }

@@ -38,12 +38,6 @@ export default class StartInstanceDetailsModal extends React.PureComponent {
     this.mounted = false;
   }
 
-  validate = values => {
-    const errors = this.props.validate(values);
-
-    return errors;
-  }
-
   onClose = () => this.props.onClose();
 
   onSubmit = (values) => {
@@ -69,9 +63,8 @@ export default class StartInstanceDetailsModal extends React.PureComponent {
         <Formik
           initialValues={ initialValues }
           onSubmit={ onSubmit }
-          validate={ this.validate }
         >
-          {({ values, isSubmitting }) => (
+          {({ isSubmitting }) => (
             <Form>
               <Modal.Title>
                   Start Process Instance <b>Step 2/2</b>
