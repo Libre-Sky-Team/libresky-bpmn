@@ -8,7 +8,14 @@
  * except in compliance with the MIT License.
  */
 
-export { default as FormControl } from './FormControl';
-export { default as AuthBasic } from './AuthBasic';
-export { default as AuthBearer } from './AuthBearer';
-export { default as ModalStep } from './ModalStep';
+import React from 'react';
+
+import css from './ModalStep.less';
+
+export default function ModalStep({ step, stepCount }) {
+  return (
+    <React.Fragment>
+      <span className={ css.ModalStep }>Step { step } of { stepCount } </span>
+    </React.Fragment>
+  );
+}

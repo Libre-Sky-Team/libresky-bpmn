@@ -26,6 +26,10 @@ import {
   Icon
 } from '../../app/primitives';
 
+import {
+  ModalStep
+} from './components';
+
 const START_CONFIG_KEY = 'start-instance-config';
 
 export default class StartInstanceTool extends PureComponent {
@@ -121,8 +125,8 @@ export default class StartInstanceTool extends PureComponent {
     let details = await this.getSavedDeploymentDetails(tab);
 
     details = await this.getDeployDetailsFromUserInput(tab, details, {
-      title: DeployStepTitle(),
-      intro: DeployIntro(),
+      title: <DeployStepTitle />,
+      intro: <DeployIntro />,
       primaryAction: 'Next'
     });
 
@@ -385,7 +389,7 @@ function CockpitLink(endpointUrl, processInstance) {
 
 function DeployStepTitle() {
   return (
-    <div>Start Process Instance <b>Step 1/2</b></div>
+    <div>Start Process Instance <ModalStep step={ 1 } stepCount={ 2 } /></div>
   );
 }
 

@@ -15,7 +15,8 @@ import { Modal } from '../../app/primitives';
 import css from './StartInstanceDetailsModal.less';
 
 import {
-  FormControl
+  FormControl,
+  ModalStep
 } from './components';
 
 import {
@@ -67,7 +68,7 @@ export default class StartInstanceDetailsModal extends React.PureComponent {
           {({ isSubmitting }) => (
             <Form>
               <Modal.Title>
-                  Start Process Instance <b>Step 2/2</b>
+                Start Process Instance <ModalStep step={ 2 } stepCount={ 2 } />
               </Modal.Title>
 
               <Modal.Body>
