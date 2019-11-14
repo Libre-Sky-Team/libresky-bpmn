@@ -110,6 +110,8 @@ export default class StartInstanceTool extends PureComponent {
         duration: 10000
       });
       log({ category: 'deploy-error', message: error.problems || error.message });
+
+      return;
     }
 
     // return process definition for new version or last saved one
@@ -172,7 +174,7 @@ export default class StartInstanceTool extends PureComponent {
     // Assumption: error occurred while deploying and notification was shown
     if (!processDefinition) {
 
-      // todo(pinussilvestrus): what to do if process not executable?
+      // todo(pinussilvestrus): what to do if no executable process?
       return;
     }
 
@@ -207,7 +209,7 @@ export default class StartInstanceTool extends PureComponent {
     } catch (error) {
       displayNotification({
         type: 'error',
-        title: 'Start Instance failed',
+        title: 'Starting process instance failed',
         content: 'See the log for further details.',
         duration: 10000
       });
