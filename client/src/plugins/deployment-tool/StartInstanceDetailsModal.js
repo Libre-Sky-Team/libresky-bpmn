@@ -80,7 +80,7 @@ export default class StartInstanceDetailsModal extends React.PureComponent {
               <Modal.Body>
 
                 <p className="intro">
-                  Enter Details to start the process on the <a href="https://docs.camunda.org/manual/latest/reference/rest/process-instance/">Camunda Engine</a>.
+                  Enter details to start the process on the <a href="https://docs.camunda.org/manual/latest/reference/rest/process-definition/post-start-process-instance/">Camunda Engine</a>.
                 </p>
 
                 <div className="deploy-success">
