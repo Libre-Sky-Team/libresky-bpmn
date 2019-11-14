@@ -15,6 +15,7 @@ import { pick } from 'min-dash';
 import CamundaAPI from './CamundaAPI';
 import StartInstanceDetailsModal from './StartInstanceDetailsModal';
 import getEditMenu from './getEditMenu';
+import isExecutable from './util/isExecutable';
 
 import css from './StartInstanceTool.less';
 
@@ -32,7 +33,8 @@ export default class StartInstanceTool extends PureComponent {
 
   state = {
     startModalState: null,
-    activeTab: null
+    activeTab: null,
+    enabled: false
   }
 
   componentDidMount() {
@@ -42,8 +44,20 @@ export default class StartInstanceTool extends PureComponent {
       subscribe
     } = this.props;
 
-    subscribe('app.activeTabChanged', activeTab => {
+    subscribe('app.activeTabChanged', ({ activeTab, tabState }) => {
       this.setState({ activeTab });
+      this.setExecutable(tabState);
+    });
+
+    subscribe('tab.changed', ({ tab, properties }) => {
+
+      const {
+        activeTab
+      } = this.state;
+
+      if (activeTab === tab) {
+        this.setExecutable(properties);
+      }
     });
 
     this.START_ACTIONS = [
@@ -54,11 +68,7 @@ export default class StartInstanceTool extends PureComponent {
       {
         name: 'Start process with new configuration',
         onClick: () => {
-          const {
-            activeTab
-          } = this.state;
-
-          this.startTab(activeTab, true);
+          this.startActiveTab(true);
         }
       }
     ];
@@ -73,6 +83,12 @@ export default class StartInstanceTool extends PureComponent {
     this.checkConnection = deployRef.current.checkConnection.bind(deployRef.current);
   }
 
+  setExecutable({ executable }) {
+    this.setState({
+      enabled: executable
+    });
+  }
+
   saveTab() {
     const {
       triggerAction
@@ -82,11 +98,7 @@ export default class StartInstanceTool extends PureComponent {
   }
 
   startInstance = () => {
-    const {
-      activeTab
-    } = this.state;
-
-    this.startTab(activeTab);
+    this.startActiveTab();
   }
 
   async ensureVersionDeployed(tab, details) {
@@ -137,7 +149,7 @@ export default class StartInstanceTool extends PureComponent {
   }
 
   // todo(pinussilvestrus): refactor flags
-  async startTab(tab, forceModal = false) {
+  async startActiveTab(forceModal = false) {
 
     const {
       displayNotification,
@@ -145,7 +157,7 @@ export default class StartInstanceTool extends PureComponent {
     } = this.props;
 
     // (0) Make sure diagram is up to date
-    tab = await this.saveTab();
+    const tab = await this.saveTab();
 
     if (!tab) {
       return;
@@ -171,8 +183,6 @@ export default class StartInstanceTool extends PureComponent {
 
     // Assumption: error occurred while deploying and notification was shown
     if (!processDefinition) {
-
-      // todo(pinussilvestrus): what to do if no executable process?
       return;
     }
 
@@ -316,7 +326,8 @@ export default class StartInstanceTool extends PureComponent {
 
   render() {
     const {
-      startModalState
+      startModalState,
+      enabled
     } = this.state;
 
     return <React.Fragment>
@@ -324,11 +335,13 @@ export default class StartInstanceTool extends PureComponent {
       <Fill slot="toolbar" group="8_deploy">
         <Button
           onClick={ this.startInstance }
+          disabled={ !enabled }
           title="Start Current Diagram"
         >
           <Icon name="play" />
         </Button>
         <DropdownButton
+          disabled={ !enabled }
           className={ css.DropdownButton }
           items={ () => this.START_ACTIONS.map(DropdownItem) }
         ></DropdownButton>

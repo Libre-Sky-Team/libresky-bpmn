@@ -10,7 +10,7 @@
 
 import React, { Component } from 'react';
 
-import { isFunction } from 'min-dash';
+import { isFunction, find } from 'min-dash';
 
 import { Fill } from '../../slot-fill';
 
@@ -24,6 +24,10 @@ import {
 import {
   debounce
 } from '../../../util';
+
+import {
+  getBusinessObject
+} from 'bpmn-js/lib/util/ModelUtil';
 
 import {
   WithCache,
@@ -374,6 +378,7 @@ export class BpmnEditor extends CachedComponent {
       distribute: selectionLength > 2,
       editLabel: !inputActive && !!selectionLength,
       exportAs: EXPORT_AS,
+      executable: isExecutable(modeler),
       find: !inputActive,
       globalConnectTool: !inputActive,
       handTool: !inputActive,
@@ -891,6 +896,22 @@ function getNamespaceDialog() {
       '<camunda> namespace support works from Camunda BPM versions 7.4.0, 7.3.3, 7.2.6 onwards.'
     ].join('\n')
   };
+}
+
+function isExecutable(modeler) {
+  const canvas = modeler.get('canvas');
+
+  const bo = getBusinessObject(canvas.getRootElement());
+
+  const definitions = bo.$parent;
+
+  if (!definitions) {
+    return false;
+  }
+
+  const rootElements = definitions.get('rootElements');
+
+  return rootElements && find(rootElements, element => element.isExecutable);
 }
 
 function isCacheStateChanged(prevProps, props) {

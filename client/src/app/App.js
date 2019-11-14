@@ -839,6 +839,8 @@ export class App extends PureComponent {
         ...properties
       }
     });
+
+    this.emitWithTab('tab.changed', tab, { properties });
   }
 
   resizeTab = () => {
@@ -980,9 +982,6 @@ export class App extends PureComponent {
         onTabChanged(activeTab, prevState.activeTab);
       }
 
-      this.emit('app.activeTabChanged', {
-        activeTab
-      });
     }
 
     if (tabLoadingState === 'shown' && prevState.tabLoadingState !== 'shown') {
@@ -998,8 +997,12 @@ export class App extends PureComponent {
       endpoints !== prevState.endpoints
     ) {
       this.workspaceChanged();
-    }
 
+      this.emit('app.activeTabChanged', {
+        activeTab,
+        tabState
+      });
+    }
 
     if (tabState !== prevState.tabState) {
       this.updateMenu(tabState);
