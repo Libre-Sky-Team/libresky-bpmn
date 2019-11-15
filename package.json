@@ -1,7 +1,7 @@
 {
-  "name": "camunda-modeler-builder",
-  "version": "0.0.0",
-  "description": "Camunda Modeler for BPMN, DMN and CMMN, based on bpmn.io",
+  "name": "libresky-bpmn",
+  "version": "1.0.0",
+  "description": "LibreSky Modeler for BPMN, DMN and CMMN, based on bpmn.io",
   "scripts": {
     "app:auto-test": "npm run app:test -- --watch",
     "app:dev": "electron ./app/dev.js resources/diagram/simple.bpmn",
@@ -26,12 +26,12 @@
     "test": "run-s *:test",
     "start": "run-s \"dev -- {@}\" --"
   },
-  "author": "Camunda <http://camunda.com>",
+  "author": "LibreSky <http://libresky.com>",
   "license": "SEE LICENSE IN LICENSE",
-  "homepage": "https://github.com/camunda/camunda-modeler",
+  "homepage": "https://github.com/Libre-Sky-Team/libresky-bpmn",
   "repository": {
     "type": "git",
-    "url": "https://github.com/camunda/camunda-modeler"
+    "url": "https://github.com/Libre-Sky-Team/libresky-bpmn"
   },
   "devDependencies": {
     "archiver": "^3.0.3",
